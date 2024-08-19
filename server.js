@@ -1,41 +1,40 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const fs = require('fs');
-const cors = require('cors');  // Import the CORS middleware
+const path = require('path');
+
 const app = express();
+const port = 3000;
+const dataFilePath = path.join(__dirname, 'data.json');
 
-app.use(cors());  // Enable CORS for all routes
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Middleware to parse JSON bodies
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Your existing routes and logic here...
-
-app.post('/submit', (req, res) => {
-    const inputText = req.body.inputText;
-    if (inputText) {
-        fs.readFile('submissions.json', (err, data) => {
-            let submissions = [];
-            if (!err && data.length > 0) {
-                submissions = JSON.parse(data);
-            }
-            submissions.push(inputText);
-            fs.writeFile('submissions.json', JSON.stringify(submissions, null, 2), (err) => {
-                if (err) {
-                    return res.status(500).send('Failed to save data');
-                }
-                res.send('Data saved successfully');
-            });
-        });
-    } else {
-        res.status(400).send('No input text provided');
+// Route to get the data
+app.get('/data', (req, res) => {
+  fs.readFile(dataFilePath, 'utf8', (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: 'Unable to read data file' });
     }
+    res.json(JSON.parse(data));
+  });
 });
 
-// Serve static files (your frontend)
-app.use(express.static('public'));
+// Route to save data
+app.post('/data', (req, res) => {
+  const { text } = req.body;
+  if (!text) {
+    return res.status(400).json({ error: 'Text is required' });
+  }
 
-// Start the server
-const port = 3000;
+  fs.writeFile(dataFilePath, JSON.stringify({ text }), 'utf8', (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Unable to write data file' });
+    }
+    res.status(200).json({ message: 'Data saved successfully' });
+  });
+});
+
 app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });
