@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
-const cors = require('cors');  // Import CORS
+const cors = require('cors');
 
 const app = express();
 
@@ -15,15 +15,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Endpoint to handle form submissions
 app.post('/submit', (req, res) => {
     const inputText = req.body.inputText;
-    console.log('Received inputText:', inputText); // Log input for debugging
-
     if (inputText) {
-        // Use a relative or absolute path to ensure the correct file is accessed
         const filePath = 'submissions.json';
 
         fs.readFile(filePath, (err, data) => {
-            if (err) {
-                console.error('Failed to read file:', err);
+            if (err && err.code !== 'ENOENT') {
                 return res.status(500).send('Failed to read file');
             }
 
@@ -33,7 +29,6 @@ app.post('/submit', (req, res) => {
                 try {
                     submissions = JSON.parse(data);
                 } catch (parseErr) {
-                    console.error('Failed to parse JSON:', parseErr);
                     return res.status(500).send('Failed to parse data');
                 }
             }
@@ -42,10 +37,8 @@ app.post('/submit', (req, res) => {
 
             fs.writeFile(filePath, JSON.stringify(submissions, null, 2), (err) => {
                 if (err) {
-                    console.error('Failed to save data:', err);
                     return res.status(500).send('Failed to save data');
                 }
-                console.log('Data saved successfully');
                 res.send('Data saved successfully');
             });
         });
@@ -54,11 +47,11 @@ app.post('/submit', (req, res) => {
     }
 });
 
-// Serve static files (your frontend HTML, CSS, and JS)
+// Serve static files
 app.use(express.static('public'));
 
 // Start the server
-const port = process.env.PORT || 3000;  // Use environment variable for port
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
