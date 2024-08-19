@@ -1,41 +1,25 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
-const cors = require('cors');
-
+const cors = require('cors');  // Import the CORS middleware
 const app = express();
 
-// Enable CORS
-app.use(cors());
-
-// Middleware
+app.use(cors());  // Enable CORS for all routes
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Endpoint to handle form submissions
+// Your existing routes and logic here...
+
 app.post('/submit', (req, res) => {
     const inputText = req.body.inputText;
     if (inputText) {
-        const filePath = 'submissions.json';
-
-        fs.readFile(filePath, (err, data) => {
-            if (err && err.code !== 'ENOENT') {
-                return res.status(500).send('Failed to read file');
-            }
-
+        fs.readFile('submissions.json', (err, data) => {
             let submissions = [];
-
-            if (data.length > 0) {
-                try {
-                    submissions = JSON.parse(data);
-                } catch (parseErr) {
-                    return res.status(500).send('Failed to parse data');
-                }
+            if (!err && data.length > 0) {
+                submissions = JSON.parse(data);
             }
-
             submissions.push(inputText);
-
-            fs.writeFile(filePath, JSON.stringify(submissions, null, 2), (err) => {
+            fs.writeFile('submissions.json', JSON.stringify(submissions, null, 2), (err) => {
                 if (err) {
                     return res.status(500).send('Failed to save data');
                 }
@@ -47,11 +31,11 @@ app.post('/submit', (req, res) => {
     }
 });
 
-// Serve static files
+// Serve static files (your frontend)
 app.use(express.static('public'));
 
 // Start the server
-const port = process.env.PORT || 3000;
+const port = 3000;
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
