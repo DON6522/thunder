@@ -10,13 +10,13 @@ const dataFilePath = path.join(__dirname, 'data.json');
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'data.json')));
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Route to get the data
 app.get('/data', (req, res) => {
   fs.readFile(dataFilePath, 'utf8', (err, data) => {
     if (err) {
-      console.error('Error reading file:', err); // Debugging line
+      console.error('Error reading file:', err);
       return res.status(500).json({ error: 'Unable to read data file' });
     }
     res.json(JSON.parse(data));
@@ -30,15 +30,30 @@ app.post('/data', (req, res) => {
     return res.status(400).json({ error: 'Text is required' });
   }
 
-  console.log('Received text:', text); // Debugging line
-
-  fs.writeFile(dataFilePath, JSON.stringify({ text }), 'utf8', (err) => {
+  fs.readFile(dataFilePath, 'utf8', (err, data) => {
     if (err) {
-      console.error('Error writing file:', err); // Debugging line
-      return res.status(500).json({ error: 'Unable to write data file' });
+      console.error('Error reading file:', err);
+      return res.status(500).json({ error: 'Unable to read data file' });
     }
-    console.log('Data saved to file successfully'); // Debugging line
-    res.status(200).json({ message: 'Data saved successfully' });
+
+    let entries;
+    try {
+      entries = JSON.parse(data);
+    } catch (err) {
+      console.error('Error parsing file data:', err);
+      entries = [];
+    }
+
+    // Append new entry
+    entries.push({ text, timestamp: new Date().toISOString() });
+
+    fs.writeFile(dataFilePath, JSON.stringify(entries, null, 2), 'utf8', (err) => {
+      if (err) {
+        console.error('Error writing file:', err);
+        return res.status(500).json({ error: 'Unable to write data file' });
+      }
+      res.status(200).json({ message: 'Data saved successfully' });
+    });
   });
 });
 
