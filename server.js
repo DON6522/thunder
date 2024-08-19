@@ -15,22 +15,37 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Endpoint to handle form submissions
 app.post('/submit', (req, res) => {
     const inputText = req.body.inputText;
+    console.log('Received inputText:', inputText); // Log input for debugging
 
     if (inputText) {
-        fs.readFile('submissions.json', (err, data) => {
+        // Use a relative or absolute path to ensure the correct file is accessed
+        const filePath = 'submissions.json';
+
+        fs.readFile(filePath, (err, data) => {
+            if (err) {
+                console.error('Failed to read file:', err);
+                return res.status(500).send('Failed to read file');
+            }
+
             let submissions = [];
 
-            if (!err && data.length > 0) {
-                submissions = JSON.parse(data);
+            if (data.length > 0) {
+                try {
+                    submissions = JSON.parse(data);
+                } catch (parseErr) {
+                    console.error('Failed to parse JSON:', parseErr);
+                    return res.status(500).send('Failed to parse data');
+                }
             }
 
             submissions.push(inputText);
 
-            fs.writeFile('submissions.json', JSON.stringify(submissions, null, 2), (err) => {
+            fs.writeFile(filePath, JSON.stringify(submissions, null, 2), (err) => {
                 if (err) {
                     console.error('Failed to save data:', err);
                     return res.status(500).send('Failed to save data');
                 }
+                console.log('Data saved successfully');
                 res.send('Data saved successfully');
             });
         });
