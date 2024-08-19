@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const cors = require('cors'); // Import cors
 
 const app = express();
 const port = 3000;
@@ -8,6 +9,7 @@ const dataFilePath = path.join(__dirname, 'data.json');
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(cors()); // Use cors middleware
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Route to get the data
